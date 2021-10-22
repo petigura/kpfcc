@@ -23,7 +23,7 @@ anybasis_params['per1'] = radvel.Parameter(value=4.2308, vary=False)    # period
 anybasis_params['tc1'] = radvel.Parameter(value=2459395.789, vary=False)    # time of periastron of 1st planet
 anybasis_params['e1'] = radvel.Parameter(value=0.0)          # eccentricity of 'per tp secosw sesinw k'1st planet
 anybasis_params['w1'] = radvel.Parameter(value=np.pi/4)      # argument of periastron of the star's orbit for 1st planet
-anybasis_params['k1'] = radvel.Parameter(value=1.0)         # velocity semi-amplitude for 1st planet
+anybasis_params['k1'] = radvel.Parameter(value=0.25)         # velocity semi-amplitude for 1st planet
 
 anybasis_params['dvdt'] = radvel.Parameter(value=0.0, vary=False)        # slope
 anybasis_params['curv'] = radvel.Parameter(value=0.0, vary=False)         # curvature
@@ -34,25 +34,10 @@ anybasis_params['jit'] = radvel.Parameter(value=0.3, vary=True)
 # Convert input orbital parameters into the fitting basis
 params = anybasis_params.basis.to_any_basis(anybasis_params,fitting_basis)
 
-# Define GP hyperparameters as Parameter objects.
-gp_per_mean = 20.64 # T_bar in Dai et al. (2017) [days]
-gp_per_unc = 5.0
-gp_explength_mean = 60
-gp_explength_unc = 10.0
-params['gp_amp'] = radvel.Parameter(value=3.0)
-params['gp_explength'] = radvel.Parameter(value=gp_explength_mean)
-params['gp_per'] = radvel.Parameter(value=gp_per_mean)
-params['gp_perlength'] = radvel.Parameter(value=0.5, vary=False)
-
 # Define prior shapes and widths here.
 priors = [
     radvel.prior.EccentricityPrior(nplanets),           # Keeps eccentricity < 1
 ]
-priors = [radvel.prior.EccentricityPrior(nplanets),
-          radvel.prior.Jeffreys('gp_amp', 0.01, 100.),
-          radvel.prior.Gaussian('gp_explength', gp_explength_mean, gp_explength_unc),
-          radvel.prior.Gaussian('gp_per', gp_per_mean, gp_per_unc),
-          radvel.prior.HardBounds('gp_per', 5.0, 60.0)]
 
 # abscissa for slope and curvature terms (should be near mid-point of time baseline)
 # time_base = np.mean([np.min(data.time), np.max(data.time)])  
@@ -60,7 +45,6 @@ priors = [radvel.prior.EccentricityPrior(nplanets),
 # optional argument that can contain stellar mass in solar units (mstar) and
 # uncertainty (mstar_err). If not set, mstar will be set to nan.
 stellar = dict(mstar=1.00, mstar_err= 0.05)
-
 
 k_injected = params['k1'].value
 mpsini_injected = radvel.utils.Msini(params['k1'].value, params['per1'].value, stellar['mstar'],
